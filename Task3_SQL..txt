@@ -1,0 +1,49 @@
+-- Query 1: Monthly Performance Analysis
+SELECT 
+    YEAR(CAST("Order Date" AS DATE)) AS Year,
+    MONTH(CAST("Order Date" AS DATE)) AS Month,
+    ROUND(SUM(CAST("Sales" AS DOUBLE)), 2) AS Monthly_Sales,
+    ROUND(SUM(CAST("Profit" AS DOUBLE)), 2) AS Monthly_Profit
+FROM sample__superstore_csv
+GROUP BY Year, Month
+ORDER BY Year, Month;
+
+-- Query 2: Growth Rate Calculation
+SELECT 
+    t1.Month,
+    ROUND(t1.Monthly_Sales, 2) AS Current_Month_Sales,
+    ROUND(t2.Monthly_Sales, 2) AS Previous_Month_Sales,
+    ROUND((t1.Monthly_Sales - t2.Monthly_Sales) / t2.Monthly_Sales * 100, 2) AS Growth_Percentage
+FROM 
+    (SELECT MONTH(CAST("Order Date" AS DATE)) AS Month,
+            SUM(CAST("Sales" AS DOUBLE)) AS Monthly_Sales
+     FROM sample__superstore_csv
+     GROUP BY Month) t1
+JOIN 
+    (SELECT MONTH(CAST("Order Date" AS DATE)) AS Month,
+            SUM(CAST("Sales" AS DOUBLE)) AS Monthly_Sales
+     FROM sample__superstore_csv
+     GROUP BY Month) t2
+ON t1.Month = t2.Month + 1
+ORDER BY t1.Month;
+
+-- Query 3: CASE Business Classification
+SELECT 
+    "Order ID",
+    ROUND(CAST("Sales" AS DOUBLE), 2) AS Sales,
+    CASE 
+        WHEN CAST("Sales" AS DOUBLE) > 1000 THEN 'High Value'
+        WHEN CAST("Sales" AS DOUBLE) BETWEEN 500 AND 1000 THEN 'Medium Value'
+        ELSE 'Low Value'
+    END AS Order_Type
+FROM sample__superstore_csv
+ORDER BY Sales DESC;
+
+-- Query 4: Underperforming Regions (Profit < 50000)
+SELECT 
+    "Region",
+    ROUND(SUM(CAST("Profit" AS DOUBLE)), 2) AS Total_Profit
+FROM sample__superstore_csv
+GROUP BY "Region"
+HAVING Total_Profit < 50000
+ORDER BY Total_Profit ASC;
